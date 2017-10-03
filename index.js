@@ -12,6 +12,8 @@ let curTabId;
 // that was added to the end of the line by posh-hg/posh-git
 const directoryRegex = /([a-zA-Z]:[^\:\[\]\?\"\<\>\|]+)/mi;
 
+let { initialWorkingDirectory } = configParse();
+
 const setCwd = (store, action, tabId, forceDispatch) => {
   const tab = tabs[tabId];
   if (process.platform === 'win32') {
@@ -49,7 +51,7 @@ exports.middleware = (store) => (next) => (action) => {
     case 'CONFIG_LOAD': {
       const hypercwdConfig = configParse(action.config);
       if (hypercwdConfig.initialWorkingDirectory) {
-        const initialWorkingDirectory = fixPath(hypercwdConfig.initialWorkingDirectory);
+        initialWorkingDirectory = fixPath(hypercwdConfig.initialWorkingDirectory);
         if (initialWorkingDirectory && existsSync(initialWorkingDirectory)) {
           store.dispatch({
             type: 'SESSION_SET_CWD',
@@ -75,7 +77,7 @@ exports.middleware = (store) => (next) => (action) => {
       curTabId = action.uid;
       store.dispatch({
         type: 'SESSION_SET_CWD',
-        cwd: tabs[curTabId].cwd,
+        cwd: tabs[curTabId].cwd || initialWorkingDirectory,
       });
       break;
     case 'SESSION_PTY_EXIT':
